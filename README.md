@@ -10,13 +10,13 @@ SpeedType is a modern, premium desktop touch-typing software built in Python usi
 - **Beginner Home, Top, and Bottom Rows**: Progressive drills covering left-hand, right-hand, and combined layouts.
 - **Intermediate & Shift Key Practice**: Lessons on capitalization and punctuation.
 - **Advanced Numbers & Special Characters**: Mastery drills for symbols and number layouts.
-- **Dynamic 1,000+ Word Drills**: Lessons dynamically seed a mix of random keystroke combinations (e.g. `aaaa dddd`), meaningless words (e.g. `dass`), and real dictionary terms to train muscle memory.
+- **Infinite Word Sliding Engine**: Lessons dynamically generate words on-the-fly from the lesson's target keys, providing an endless typing experience. Custom practice loads user words sequentially in a continuous stream.
 
 ### 2. Live Performance Metrics & Visual Keyboard
 - **Tactile Typing Interface**: Highlights typed text green (correct) or red/underlined (errors) with a retro block cursor.
 - **Real-Time Calculation**: Live Words Per Minute (WPM) and Accuracy % counters.
 - **Keyboard Visualizer**: Displays a QWERTY layout showing which key to type next (including proper Shift recommendations for capitalized keys or top-row symbols) and flashing keystroke feedback.
-- **Time Controls**: Practice sessions default to **10 minutes** with **Pause / Resume** functions and automatic text looping.
+- **Time Controls & No-Scroll Sliding Layout**: Practice sessions run for **10 minutes** with **Pause / Resume** overlays. The typing frame displays exactly **2 lines** of text with a **generous line spacing** (`spacing2=18`) and automatically slides text up line-by-line as you type, completely eliminating vertical scroll bars or scrolling visual jumps.
 
 ### 3. Gamified Refleshing Modules
 - **Word Rain (Falling Words)**: Type whole words and press `Enter` to clear them before they hit the ground. Fall speeds scale with levels.
