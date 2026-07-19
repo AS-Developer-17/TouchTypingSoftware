@@ -1,0 +1,56 @@
+# Touch Typing Software - Technical Specification & Prompt
+
+## 1. Project Overview
+Develop a desktop Touch Typing Software in Python using the `tkinter` GUI framework (and standard Python libraries). The application must feature structured typing lessons, real-time interactive feedback, database-driven user progress tracking, and gamified elements to enhance engagement. The user interface must be polished, responsive, and visually appealing, taking design inspiration from modern typing portals such as TypingMaster.
+
+To simplify distribution, the codebase should be hardcoded into a single main Python script with clearly partitioned modular sections (e.g., database manager, styling/theme manager, core UI pages, typing engine, game engine, and analytical reporter).
+
+---
+
+## 2. Core Architecture & Database Schema
+Use `sqlite3` for persistence. Create the following database tables:
+- **`users`**: Storage for user profiles (e.g., `id`, `username`, `password_hash`, `created_at`).
+- **`progress`**: Record-keeping for completed lessons (e.g., `id`, `user_id`, `lesson_id`, `wpm`, `accuracy`, `completed_at`).
+- **`game_scores`**: Performance metrics for games (e.g., `id`, `user_id`, `game_name`, `score`, `level_reached`, `played_at`).
+- **`settings`**: User configuration preferences (e.g., `user_id`, `theme`, `sound_enabled`, `keyboard_layout`).
+
+---
+
+## 3. UI/UX & Design Guidelines
+- **Modern Styling**: Apply a clean, dark-mode-first aesthetic with a curated color palette (avoid default Tkinter gray). Use a grid system with consistent margins and rounded elements where possible.
+- **Responsive Layout**: Design screens to scale gracefully when resized.
+- **Dynamic Feedback**: Include a visual keyboard layout at the bottom of the typing screen. Highlight the target key in blue/yellow and flash correct presses in green and incorrect presses in red.
+
+---
+
+## 4. Key Features
+
+### Feature 1: User Authentication & Profiles
+- Login and registration portal.
+- User profile dashboard displaying career statistics: average WPM, highest WPM, average accuracy, total typing time, and a list of key combinations with high error rates ("Problem Keys").
+
+### Feature 2: Structured Curriculum & Typing Lessons
+- **Progressive Lessons**:
+  - *Beginner*: Home row (`a s d f j k l ;`), top row (`q w e r u i o p`), bottom row (`z x c v m , . /`).
+  - *Intermediate*: Shift key usage, capital letters, basic punctuation.
+  - *Advanced*: Numbers, symbols, and special characters.
+- **Interactive Typing Interface**:
+  - Live calculation of Words Per Minute (WPM) and Accuracy %.
+  - Visual highlight of current cursor position in the target text.
+  - Interactive on-screen keyboard representing the QWERTY layout.
+
+### Feature 3: Gamified Typing Modules
+- **Game 1: Falling Words (Word Rain)**
+  - Words fall from the top of a canvas area. The user must type the words before they hit the bottom.
+  - Typing speed increases as score goes up.
+- **Game 2: Target Invaders**
+  - Random single characters drop. Typing them successfully shoots the target.
+  - Includes a lives counter (e.g., 3 lives) and high score persistence.
+
+### Feature 4: Custom Practice Mode
+- Allow users to paste their own custom paragraphs or load text files to practice.
+- Generates WPM and accuracy metrics at the end of the custom practice session.
+
+### Feature 5: Audio & Themes Customization
+- Sound effects toggle (mechanical keyboard click for successful keystrokes, warning sound for errors).
+- Multiple visual themes (e.g., Cyberpunk Dark, Classic Light, Forest Minimalist).
