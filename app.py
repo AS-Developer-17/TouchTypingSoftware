@@ -891,20 +891,23 @@ class PracticePage(tk.Frame):
         self.master_app = master_app
         self.lesson_id = lesson_id
         
-        # Load Content Text
+        # Load Content Text and setup word generators
         if lesson_id:
             conn = db_manager.get_connection()
             cursor = conn.cursor()
             cursor.execute("SELECT title, content FROM lessons WHERE id = ?", (lesson_id,))
-            self.title_str, self.target_text = cursor.fetchone()
+            self.title_str, db_content = cursor.fetchone()
             conn.close()
+            # Clean character pool from spaces/newlines to get unique chars
+            self.char_pool = "".join(sorted(list(set(db_content.replace("\n", "").replace("\r", "")))))
         else:
             self.title_str = "Custom Practice Mode"
-            self.target_text = custom_text if custom_text else "Quick brown fox jumps over the lazy dog."
+            db_content = custom_text if custom_text else "the quick brown fox jumps over the lazy dog."
+            self.custom_words = db_content.split()
+            if not self.custom_words:
+                self.custom_words = ["practice"]
+            self.custom_word_idx = 0
             
-        # Normalizing typing text
-        self.target_text = self.target_text.replace('\r\n', '\n').replace('\r', '\n').strip()
-        
         # Keystroke Metrics tracking
         self.current_idx = 0
         self.total_keystrokes = 0
@@ -915,6 +918,11 @@ class PracticePage(tk.Frame):
         self.is_paused = False
         self.errors_logged = {} # Local key index errors tracker
         
+        # Generate initial 2 lines
+        self.line1 = self.generate_new_line() + " "
+        self.line2 = self.generate_new_line() + " "
+        self.target_text = self.line1 + "\n" + self.line2
+        
         # UI Top Header panel
         self.setup_header()
         
@@ -924,13 +932,16 @@ class PracticePage(tk.Frame):
         
         self.text_widget = tk.Text(
             self.text_frame,
-            font=("Courier New", 18, "bold"),
+            font=("Courier New", 20, "bold"),
             bg=theme["card_bg"],
             fg=theme["muted"],
             bd=0,
             highlightthickness=0,
-            wrap="word",
-            height=6
+            wrap="none",
+            height=2,
+            spacing2=18,
+            padx=10,
+            pady=10
         )
         self.text_widget.pack(fill="both", expand=True)
         
@@ -988,6 +999,55 @@ class PracticePage(tk.Frame):
         lbl.pack(side="left", padx=4)
         return lbl
 
+    def get_next_word(self):
+        if self.lesson_id:
+            char_list = [c for c in self.char_pool if c != ' ']
+            if not char_list:
+                char_list = ['a']
+                
+            real_words = []
+            if self.lesson_id == 5:
+                real_words = ["dad", "lad", "glass", "salad", "flash", "glad", "flask", "half", "gash", "fall", "shall", "ask", "gas", "dash", "lash", "fad", "fads", "lag", "lags", "flag", "flags"]
+            elif self.lesson_id == 13:
+                real_words = ["the", "quick", "brown", "fox", "jumps", "over", "the", "lazy", "dog", "pack", "my", "box", "with", "five", "dozen", "liquor", "jugs", "typing", "practice", "keyboard", "master", "speed", "accuracy"]
+            elif self.lesson_id == 16:
+                real_words = ["The", "Quick", "Brown", "Fox", "Jumps", "Over", "The", "Lazy", "Dog.", "Typing", "Is", "Very", "Fun", "And", "Useful.", "Hello", "World!", "How", "Are", "You?"]
+
+            if real_words and random.random() < 0.4:
+                w = random.choice(real_words)
+                if self.lesson_id == 16 and random.random() < 0.3:
+                    w = w.capitalize()
+                return w
+            else:
+                if random.random() < 0.15:
+                    pat_type = random.choice([1, 2])
+                    if pat_type == 1:
+                        w = random.choice(char_list) * random.randint(3, 5)
+                    else:
+                        c1 = random.choice(char_list)
+                        c2 = random.choice(char_list)
+                        w = (c1 + c2) * 2
+                else:
+                    w_len = random.randint(2, 6)
+                    w = "".join(random.choice(char_list) for _ in range(w_len))
+                    
+                if any(c.isupper() for c in char_list) and random.random() < 0.25:
+                    w = w.capitalize()
+                return w
+        else:
+            w = self.custom_words[self.custom_word_idx]
+            self.custom_word_idx = (self.custom_word_idx + 1) % len(self.custom_words)
+            return w
+
+    def generate_new_line(self):
+        words = []
+        current_len = 0
+        while current_len < 55:
+            w = self.get_next_word()
+            words.append(w)
+            current_len += len(w) + 1
+        return " ".join(words)
+
     def toggle_pause(self):
         if self.start_time is None:
             return
@@ -1019,12 +1079,9 @@ class PracticePage(tk.Frame):
         # Character segments
         self.text_widget.tag_add("correct", "1.0", f"1.0 + {self.current_idx} chars")
         
-        if self.current_idx < len(self.target_text):
+        if self.current_idx < len(self.line1):
             self.text_widget.tag_add("current", f"1.0 + {self.current_idx} chars", f"1.0 + {self.current_idx + 1} chars")
             self.text_widget.tag_add("remaining", f"1.0 + {self.current_idx + 1} chars", "end")
-            
-            # Scroll text widget cursor to view automatically
-            self.text_widget.see(f"1.0 + {self.current_idx} chars")
 
     def on_keypress(self, event):
         if self.is_paused:
@@ -1037,7 +1094,7 @@ class PracticePage(tk.Frame):
         if event.state & 0x4: # Control mask
             return
             
-        target_char = self.target_text[self.current_idx]
+        target_char = self.line1[self.current_idx]
         pressed_char = event.char
         
         # Standardize return keys
@@ -1065,9 +1122,17 @@ class PracticePage(tk.Frame):
             play_sound_async("click", self.master_app.sound_enabled)
             
             self.current_idx += 1
-            if self.current_idx >= len(self.target_text):
-                # Reset to loop text block
+            if self.current_idx >= len(self.line1):
+                # Slide text lines infinitely
+                self.line1 = self.line2
+                self.line2 = self.generate_new_line() + " "
                 self.current_idx = 0
+                self.target_text = self.line1 + "\n" + self.line2
+                
+                self.text_widget.config(state="normal")
+                self.text_widget.delete("1.0", "end")
+                self.text_widget.insert("1.0", self.target_text)
+                self.text_widget.config(state="disabled")
         else:
             # Mistake logic
             self.error_count += 1
